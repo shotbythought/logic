@@ -1,5 +1,4 @@
 from Action import Action
-from GameState import GameState
 from ManualAI import ManualAI
 
 import pprint
@@ -39,7 +38,7 @@ class Game:
 
     def start(self):
         while not self.is_game_over:
-            g.play_turn()
+            self.play_turn()
 
     def check_claims(self):
         players = list(range(4))
@@ -149,10 +148,3 @@ class GameState:
 
     def __str__(self):
         return "Player %d:\nHistory: %r\nCards: \n%s" % (self.player, self.history, pp.pformat(self.cards))
-
-AIs = []
-for i in range(4):
-    AIs.append(ManualAI(i))
-
-g = Game(AIs)
-g.start()
