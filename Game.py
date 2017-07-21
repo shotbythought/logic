@@ -48,6 +48,7 @@ class Game:
             is_claiming, cards = self.AIs[player].claim(self.pgs[player])
 
             if is_claiming:
+                assert all(all(card >= 0 or card < 12 for card in hand) for hand in cards)
                 self.do_claim(player, cards)
                 claimed = True
 
@@ -55,6 +56,7 @@ class Game:
 
     def play_turn(self):
         which_card = self.AIs[self.turn].pass_card(self.pgs[self.turn])
+        assert which_card >= 0 and which_card < 6, ("Cannot pass the %dth card" % which_card)
         self.do_pass(which_card)      
 
         if self.check_claims():
@@ -63,12 +65,16 @@ class Game:
         friend = (self.turn+2)%4
         which_player, which_card, guess = self.AIs[friend].guess_card(self.pgs[friend])
         correct = self.do_guess(which_player, which_card, guess)
+        assert which_player >= 0 and which_player < 4, ("Does not exist an %dth player" % which_player)
+        assert which_card >= 0 and which_card < 6, ("Cannot guess the %dth card" % which_card)
+        assert guess >= 0 and guess < 12, ("Cannot guess that a card is %d" % guess)
 
         if self.check_claims():
             return
 
         if not correct:
             which_card = self.AIs[friend].flip_card(self.pgs[friend])
+            assert which_card >= 0 and which_card < 6, ("Cannot pass the %dth card" % which_card)
             self.do_flip(which_card)
 
             if self.check_claims():

@@ -15,7 +15,7 @@ class Player:
         raise Exception('Unimplemented flip')
 
     def claim(self, gamestate):
-        """ returns a tuple of a boolean and a list of list """
+        """ returns a tuple (claiming, cards) of a boolean and a list of list """
         """ bool: true or false, whether the player wants to claim """
         """ list of list: structure which contains all the correct answers """
         raise Exception('Unimplemented claim')
