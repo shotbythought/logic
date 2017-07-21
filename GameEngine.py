@@ -1,9 +1,13 @@
 from Game import Game
 from ManualAI import ManualAI
 
-AIs = []
-for i in range(4):
-    AIs.append(ManualAI(i))
+num_games = 1000
 
-g = Game(AIs)
-g.start()
+for game_count in range(0, num_games):
+	AIs = []
+	for i in range(4):
+	    AIs.append(ManualAI(i))
+
+	g = Game(AIs)
+	score = g.run_game()
+	print("score is %r" % score)
