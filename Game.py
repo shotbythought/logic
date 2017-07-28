@@ -25,7 +25,7 @@ def generateCards():
     return cards
 
 class Game:
-    def __init__(self, AIs):
+    def __init__(self, AIs, debug = False):
         self.gs = GameState()
         self.turn = random.randint(0, 3)
 
@@ -34,11 +34,14 @@ class Game:
             self.pgs.append(GameState(self.gs.cards, i))
 
         self.AIs = AIs
+        self.debug = debug
         self.is_game_over = False
+        self.score = [0]*4
 
-    def start(self):
+    def run_game(self):
         while not self.is_game_over:
             self.play_turn()
+        return self.score
 
     def check_claims(self):
         players = list(range(4))
@@ -48,7 +51,6 @@ class Game:
             is_claiming, cards = self.AIs[player].claim(self.pgs[player])
 
             if is_claiming:
-                assert all(all(card >= 0 or card < 12 for card in hand) for hand in cards)
                 self.do_claim(player, cards)
                 return True
 
@@ -56,8 +58,7 @@ class Game:
 
     def play_turn(self):
         which_card = self.AIs[self.turn].pass_card(self.pgs[self.turn])
-        assert which_card >= 0 and which_card < 6, ("Cannot pass the %dth card" % which_card)
-        self.do_pass(which_card)      
+        self.do_pass(which_card)
 
         if self.check_claims():
             return
@@ -65,16 +66,12 @@ class Game:
         friend = (self.turn+2)%4
         which_player, which_card, guess = self.AIs[friend].guess_card(self.pgs[friend])
         correct = self.do_guess(which_player, which_card, guess)
-        assert which_player >= 0 and which_player < 4, ("Does not exist an %dth player" % which_player)
-        assert which_card >= 0 and which_card < 6, ("Cannot guess the %dth card" % which_card)
-        assert guess >= 0 and guess < 12, ("Cannot guess that a card is %d" % guess)
 
         if self.check_claims():
             return
 
         if not correct:
             which_card = self.AIs[friend].flip_card(self.pgs[friend])
-            assert which_card >= 0 and which_card < 6, ("Cannot pass the %dth card" % which_card)
             self.do_flip(which_card)
 
             if self.check_claims():
@@ -89,19 +86,27 @@ class Game:
             self.pgs[i].history.append(action)
 
     def do_pass(self, which_card):
-        action = Action("pass", player=self.turn, which_card=which_card)
-        self.update_history(action)
-
         from_player = self.turn
         receive_player = (self.turn+2)%4
+
+        self.check_input(which_card >= 0 and which_card < 6, ("Cannot pass the %dth card" % which_card))
+        self.check_input(self.pgs[receive_player].cards[from_player][which_card]['rank'] == 'Unclear', \
+               ("Cannot pass the %dth card, as it has already been passed" % which_card))
+
         self.pgs[receive_player].cards[from_player][which_card] = self.gs.cards[from_player][which_card]
+
+        action = Action("pass", player=self.turn, which_card=which_card)
+        self.update_history(action)
 
     def do_guess(self, which_player, which_card, guess):
         guessing_player = (self.turn+2)%4
 
-        if (guessing_player - which_player) % 2 == 0:
-            print("YOU FAILED YOU SUCK SO MUCH BALLZDEEP WRONG PLAYER TC")
-            import sys;sys.exit(1)
+        self.check_input(which_player >= 0 and which_player < 4, ("Does not exist an %dth player" % which_player))
+        self.check_input(which_card >= 0 and which_card < 6, ("Cannot guess the %dth card" % which_card))
+        self.check_input(guess >= 0 and guess < 12, ("Cannot guess that a card is %d" % guess))
+        self.check_input((guessing_player - which_player) % 2 != 0, "Can't guess a card of your friend")
+        self.check_input(self.pgs[guessing_player].cards[which_player][which_card]['rank'] == 'Unclear', \
+                "Cannot guess the %dth card, as it has already been revealed" % which_card)
 
         is_correct = self.gs.cards[which_player][which_card]['rank'] == guess
 
@@ -117,22 +122,43 @@ class Game:
     def do_flip(self, which_card):
         flip_player = self.turn
 
-        action = Action("flip", player=flip_player, which_card=which_card)
-        self.update_history(action)
+        self.check_input(which_card >= 0 and which_card < 6, ("Cannot pass the %dth card" % which_card))
+        self.check_input(self.pgs[(flip_player + 1) % 4].cards[flip_player][which_card]['rank'] == 'Unclear', \
+                "Cannot flip the %dth card, as it has already been flipped" % which_card)
 
         for i in range(4):
             self.pgs[i].cards[flip_player][which_card] = self.gs.cards[flip_player][which_card]
 
+        action = Action("flip", player=flip_player, which_card=which_card)
+        self.update_history(action)
+
     def do_claim(self, player, cards):
         self.is_game_over = True
+
+        self.check_input(all(all(card >= 0 and card < 12 for card in hand) for hand in cards), \
+                    "Cannot claim an out of range card")
 
         for i in range(4):
             for j in range(6):
                 if cards[i][j] != self.gs.cards[i][j]['rank']:
-                    print("Player %d and Player %d Win!" % ((player+1)%4, (player+3)%4))
+                    self.score = self.score_with_winner((player+1)%4)
                     return
 
-        print("Player %d and Player %d Win!" % (player, (player+2)%4))
+        self.score = self.score_with_winner(player)
+
+    def check_input(self, condition, message):
+        if not condition:
+            if self.debug:
+                print(">>> Error: %s <<<" % message)
+                import sys;sys.exit(1)
+            else:
+                raise RuntimeError(self.score_with_winner((self.turn + 1) % 4),message)
+
+    def score_with_winner(self, winner):
+        score = [0] * 4
+        score[winner] = 1
+        score[(winner+2)%4] = 1
+        return score
 
 class GameState:
     def __init__(self, cards=None, player=-1):
