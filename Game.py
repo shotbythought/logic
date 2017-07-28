@@ -36,23 +36,23 @@ class Game:
         self.AIs = AIs
         self.is_game_over = False
 
-    def run_game(self):
+    def start(self):
         while not self.is_game_over:
             self.play_turn()
-        return self.score
 
     def check_claims(self):
-        claimed = False
+        players = list(range(4))
+        random.shuffle(players)
 
-        for player in list(range(4)):
+        for player in players:
             is_claiming, cards = self.AIs[player].claim(self.pgs[player])
 
             if is_claiming:
                 assert all(all(card >= 0 or card < 12 for card in hand) for hand in cards)
                 self.do_claim(player, cards)
-                claimed = True
+                return True
 
-        return claimed
+        return False
 
     def play_turn(self):
         which_card = self.AIs[self.turn].pass_card(self.pgs[self.turn])
@@ -125,19 +125,14 @@ class Game:
 
     def do_claim(self, player, cards):
         self.is_game_over = True
-        self.score = [0] * 4
 
         for i in range(4):
             for j in range(6):
                 if cards[i][j] != self.gs.cards[i][j]['rank']:
-                    print("Wrong claim, Player %d and Player %d Win!" % ((player+1)%4, (player+3)%4))
-                    self.score[(player+1)%4] = 1
-                    self.score[(player+3)%4] = 1
+                    print("Player %d and Player %d Win!" % ((player+1)%4, (player+3)%4))
                     return
 
-        print("Correct claim, Player %d and Player %d Win!" % (player, (player+2)%4))
-        self.score[player] = 1
-        self.score[(player+2)%4] = 1
+        print("Player %d and Player %d Win!" % (player, (player+2)%4))
 
 class GameState:
     def __init__(self, cards=None, player=-1):
