@@ -19,7 +19,6 @@ class GameState:
             self.cards[player] = cards[player]
         else:
             self.cards = self.generateCards()
-            print(self)
 
     def generateCards(self):
         """ returns a list of hands """

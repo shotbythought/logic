@@ -130,8 +130,7 @@ class Game:
     def check_input(self, condition, message):
         if not condition:
             if self.debug:
-                print(">>> Error: %s <<<" % message)
-                import sys;sys.exit(1)
+                import sys;sys.exit(">>> Error: %s <<<" % message)
             else:
                 raise RuntimeError(self.score_with_winner((self.turn + 1) % 4),message)
 
