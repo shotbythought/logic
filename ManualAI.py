@@ -2,12 +2,12 @@ from Player import Player
 
 class ManualAI(Player):
     def pass_card(self, gs):
-        print("\n\n\n\nPlayer " + str(self.player) + " Passing")
+        print("\n\n\n\nPlayer " + str(self.position) + " Passing")
         print(gs)
         return input("Pass which card: ")
 
     def guess_card(self, gs):
-        print("\n\n\n\nPlayer " + str(self.player) + " Guessing")
+        print("\n\n\n\nPlayer " + str(self.position) + " Guessing")
         print(gs)
         which_player = input("Who are you guessing: ")
         which_card = input("Which card are you guessing: ")
@@ -15,12 +15,12 @@ class ManualAI(Player):
         return which_player, which_card, rank
 
     def flip_card(self, gs):
-        print("\n\n\n\nPlayer " + str(self.player) + " Flipping")
+        print("\n\n\n\nPlayer " + str(self.position) + " Flipping")
         print(gs)
         return input("Flip which card: ")
 
     def claim(self, gs):
-        print("\n\n\n\nPlayer " + str(self.player) + " Claiming")
+        print("\n\n\n\nPlayer " + str(self.position) + " Claiming")
         print(gs)
         is_claiming = raw_input("Are you claiming? ")
 

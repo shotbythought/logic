@@ -1,16 +1,16 @@
 from Game import Game
 from ManualAI import ManualAI
 
-num_games = 1000
 
+AIs = []
+for i in range(4):
+    AIs.append(ManualAI(i))
+num_games = 1000
 total_score = [0] * 4
+debug = True
 
 for game_count in range(0, num_games):
-	AIs = []
-	for i in range(4):
-	    AIs.append(ManualAI(i))
-
-	g = Game(AIs, debug = True)
+	g = Game(AIs, debug = debug)
 	score = [0] * 4
 	try:
 		score = g.run_game()

@@ -1,6 +1,6 @@
 class Player:
-    def __init__(self, player):
-        self.player = player
+    def __init__(self, position):
+        self.position = position
 
     def pass_card(self, gamestate):
         """ returns the index of the card to pass """
