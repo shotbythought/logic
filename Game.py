@@ -115,6 +115,7 @@ class Game:
     def do_claim(self, player, cards):
         self.is_game_over = True
 
+        self.turn = player
         self.check_input(all(all(card >= 0 and card < 12 for card in hand) for hand in cards), \
                     "Cannot claim an out of range card")
 
