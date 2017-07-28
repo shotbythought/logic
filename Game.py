@@ -100,7 +100,7 @@ class Game:
         return is_correct
 
     def do_flip(self, which_card):
-        flip_player = self.turn
+        flip_player = (self.turn+2)%4
 
         self.check_input(which_card >= 0 and which_card < 6, ("Cannot pass the %dth card" % which_card))
         self.check_input(self.pgs[(flip_player + 1) % 4].cards[flip_player][which_card]['rank'] == 'Unclear', \
