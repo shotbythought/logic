@@ -1,28 +1,8 @@
 from Action import Action
+from GameState import GameState
 from ManualAI import ManualAI
 
-import pprint
 import random
-
-pp = pprint.PrettyPrinter(indent=4)
-
-def generateCards():
-    """ returns a list of hands """
-    deck = []
-    for i in range(2):
-        for j in range(12):
-            deck.append({'rank' : j, 'color' : i})
-
-    random.shuffle(deck)
-
-    cards = []
-    hand_size = 6
-    for i in range(4):
-        hand = deck[hand_size * i : hand_size * (i + 1)]
-        hand.sort(key = (lambda x : x['rank']))
-        cards.append(hand)
-
-    return cards
 
 class Game:
     def __init__(self, AIs, debug = False):
@@ -159,24 +139,3 @@ class Game:
         score[winner] = 1
         score[(winner+2)%4] = 1
         return score
-
-class GameState:
-    def __init__(self, cards=None, player=-1):
-        self.history = []
-        self.player = player
-
-        if cards:
-            self.cards = []
-            for i in range(4):
-                hand = []
-                for j in range(6):
-                    hand.append({'rank': "Unclear", 'color': cards[i][j]['color']})
-                self.cards.append(hand)
-
-            self.cards[player] = cards[player]
-        else:
-            self.cards = generateCards()
-            print(self)
-
-    def __str__(self):
-        return "Player %d:\nHistory: %r\nCards: \n%s" % (self.player, self.history, pp.pformat(self.cards))
