@@ -1,6 +1,9 @@
 from Player import Player
 from copy import deepcopy
 import pprint
+from GameState import GameState
+
+import random
 
 class JoneAndMike(Player):
     def __init__(self, position):
@@ -11,6 +14,22 @@ class JoneAndMike(Player):
         raise Exception('Unimplemented pass_card')
 
     def guess_card(self, gamestate):
+        deduction = self.get_deductions(gamestate.cards)
+
+        guesses = []
+        for i in [(self.position+1)%4, (self.position+3)%4]:
+            for j in range(6):
+                num_pos = len(deduction[i][j][0])
+                if num_pos != 1:
+                    guesses.append((num_pos, i, j, list(deduction[i][j][0])[random.randint(0,3)]))
+
+        guesses.sort()
+
+        print(guesses)
+
+        return (guesses[0][1], guesses[0][2], guesses[0][3])
+
+
         """ returns a tuple (pid, ind, guess), which is equivalent to guessing the indth card of pid as guess """
         raise Exception('Unimplemented guess')
 
@@ -24,7 +43,7 @@ class JoneAndMike(Player):
         """ list of list: structure which contains all the correct answers """
         raise Exception('Unimplemented claim')
 
-    def get_internal_gamestate(self, gamestate):
+    def get_deductions(self, gamestate):
         """given an external gamestate, updates internal gamestate"""
         deduction = [[[set(range(12)),0] for j in range(6)] for i in range(4)]
 
@@ -111,54 +130,85 @@ class JoneAndMike(Player):
         pass
 
 
-jam = JoneAndMike(0)
+if __name__ == '__main':
+    jam = JoneAndMike(0)
 
-# jam.get_internal_gamestate([   [   {'color': 1, 'rank': 0},
-#         {'color': 1, 'rank': 1},
-#         {'color': 0, 'rank': 2},
-#         {'color': 0, 'rank': 4},
-#         {'color': 1, 'rank': 8},
-#         {'color': 1, 'rank': 11}],
-#     [   {'color': 1, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'}],
-#     [   {'color': 0, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'}],
-#     [   {'color': 0, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'}]])
+    jam.get_deductions([   [   {'color': 1, 'rank': 0},
+            {'color': 1, 'rank': 1},
+            {'color': 0, 'rank': 2},
+            {'color': 0, 'rank': 4},
+            {'color': 1, 'rank': 8},
+            {'color': 1, 'rank': 11}],
+        [   {'color': 1, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'}],
+        [   {'color': 0, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'}],
+        [   {'color': 0, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'}]])
 
-jam.get_internal_gamestate([   [   {'color': 1, 'rank': 0},
-        {'color': 1, 'rank': 1},
-        {'color': 0, 'rank': 2},
-        {'color': 0, 'rank': 4},
-        {'color': 1, 'rank': 8},
-        {'color': 1, 'rank': 11}],
-    [   {'color': 1, 'rank': 'Unclear'},
-        {'color': 1, 'rank': 'Unclear'},
-        {'color': 1, 'rank': 'Unclear'},
-        {'color': 0, 'rank': 'Unclear'},
-        {'color': 1, 'rank': 'Unclear'},
-        {'color': 1, 'rank': 'Unclear'}],
-    [   {'color': 0, 'rank': 1},
-        {'color': 1, 'rank': 'Unclear'},
-        {'color': 1, 'rank': 'Unclear'},
-        {'color': 0, 'rank': 'Unclear'},
-        {'color': 0, 'rank': 'Unclear'},
-        {'color': 0, 'rank': 'Unclear'}],
-    [   {'color': 0, 'rank': 'Unclear'},
-        {'color': 0, 'rank': 'Unclear'},
-        {'color': 0, 'rank': 'Unclear'},
-        {'color': 0, 'rank': 'Unclear'},
-        {'color': 1, 'rank': 'Unclear'},
-        {'color': 0, 'rank': 'Unclear'}]])
+    cards = [   [   {'color': 1, 'rank': 0},
+            {'color': 1, 'rank': 1},
+            {'color': 0, 'rank': 2},
+            {'color': 0, 'rank': 4},
+            {'color': 1, 'rank': 8},
+            {'color': 1, 'rank': 11}],
+        [   {'color': 1, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'}],
+        [   {'color': 0, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'}],
+        [   {'color': 0, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'},
+            {'color': 1, 'rank': 'Unclear'},
+            {'color': 0, 'rank': 'Unclear'}]]
+
+    gs = GameState(cards=cards, player=0)
+
+    print(jam.guess_card(gs))
+
+
+    # jam.get_internal_gamestate([   [   {'color': 1, 'rank': 0},
+    #         {'color': 1, 'rank': 1},
+    #         {'color': 0, 'rank': 2},
+    #         {'color': 0, 'rank': 4},
+    #         {'color': 1, 'rank': 8},
+    #         {'color': 1, 'rank': 11}],
+    #     [   {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'}],
+    #     [   {'color': 0, 'rank': 1},
+    #         {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'}],
+    #     [   {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'}]])
