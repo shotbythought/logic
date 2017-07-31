@@ -55,6 +55,7 @@ class JoneAndMike(Player):
                 for num in deepcopy(deduction[i][j][0]):
                     if num <= mins[deduction[i][j][1]] or num < mins[(deduction[i][j][1]+1)%2]:
                         deduction[i][j][0].remove(num)
+                        # print("Hand %d Card %d can't be %d because it must be greater" % (i, j, num))
                 mins[deduction[i][j][1]] = min(deduction[i][j][0]) 
 
         # Decreasing
@@ -64,6 +65,7 @@ class JoneAndMike(Player):
                 for num in deepcopy(deduction[i][j][0]):
                     if num >= maxs[deduction[i][j][1]] or num > maxs[(deduction[i][j][1]+1)%2]:
                         deduction[i][j][0].remove(num)
+                        # print("Hand %d Card %d can't be %d because it must be smaller" % (i, j, num))
 
                 maxs[deduction[i][j][1]] = max(deduction[i][j][0]) 
 
@@ -77,6 +79,7 @@ class JoneAndMike(Player):
                             if not (i == k and j == l):
                                 if deduction[i][j][1] == deduction[k][l][1] and only_number in deduction[k][l][0]:
                                     deduction[k][l][0].remove(only_number)
+                                    # print("Hand %d Card %d can't be %d because it already exists somewhere" % (i, j, num))
 
         # Existence
         for rank in range(12):
@@ -94,6 +97,8 @@ class JoneAndMike(Player):
 
                 assert instances != 0
                 if instances == 1:
+                    # if len(deduction[person][card][0]) > 1:
+                    #     print("Hand %d Card %d must be %d because it's the only card that can be" % (person, card, rank))
                     deduction[person][card][0] = set([rank])
 
 
@@ -145,7 +150,7 @@ jam.get_internal_gamestate([   [   {'color': 1, 'rank': 0},
         {'color': 0, 'rank': 'Unclear'},
         {'color': 1, 'rank': 'Unclear'},
         {'color': 1, 'rank': 'Unclear'}],
-    [   {'color': 0, 'rank': 'Unclear'},
+    [   {'color': 0, 'rank': 1},
         {'color': 1, 'rank': 'Unclear'},
         {'color': 1, 'rank': 'Unclear'},
         {'color': 0, 'rank': 'Unclear'},
