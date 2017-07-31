@@ -35,13 +35,13 @@ How we will be running the game (sort of). There are a few parameters you can se
 - `debug`: if `True`, this will exit the game everytime an invalid input is given by an AI. Otherwise, the team that gave the invalid input automatically loses the game. When we are running this during the final showdown, we will set `debug` to be false.
 
 ## Indexing
-Everything is 0 indexed. In other words, the range of cards you can guess is [0,11], the range of position of cards is [0,6], the range of colors is [0,1], and the range of players is [0,3]. Player 0 is friends with player 2, and player 1 is friends with player 3.
+Everything is 0 indexed. In other words, the range of cards you can guess is [0,11], the range of position of cards is [0,5], the range of colors is [0,1], and the range of players is [0,3]. Player 0 is friends with player 2, and player 1 is friends with player 3.
 
 ## Invalid Inputs
 During the final showdown, an invalid input will result in the loss of a game.
 - A card that is not in the range [0,11]
-- A card position that is not in the range [0,6]
-- A player position that is not in the range [0,4]
+- A card position that is not in the range [0,5]
+- A player position that is not in the range [0,3]
 - Passing a card that has already been passed/revealed
 - Guessing the card of a friend
 - Guessing a card that has already been revealed
