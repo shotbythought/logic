@@ -9,7 +9,7 @@ Start with Player.py and GameState.py. Or ask Michael or Joanne.
 
 #### Player.py
 The framework of the AI you are implementing. Make sure the values you return follow 0 indexing (see below).
-- `position`: the position of the player in the game, in the range [0,4]
+- `position`: the position of the player in the game, in the range [0,3]
 #### GameState.py
 Each time you are asked to make a move, we provide you with a GameState object.
 - `cards`: a list of list of the cards you can currently see. `cards[2][3]` gives you a dictionary that looks like `{'rank': 5, 'color': 1}`, which means that you can see that the 2nd player's 3rd card is a 5 with color 1. If you can't see that card, the rank will be the string `"unclear"`.
@@ -17,7 +17,7 @@ Each time you are asked to make a move, we provide you with a GameState object.
 #### Action.py
 Used for recording every action that has been performed. Different information is stored depending on the action type (pass, guess, or flip).
 - `action_type`: the type of action, one of `["pass", "guess", "flip"]`.
-- `player`: the position of the player that initiated the action, in the range [0,4].
+- `player`: the position of the player that initiated the action, in the range [0,3].
 - `which_card`: the card that the action was performed on.
 - The rest are only valid if `action_type == "guess"`:
     - `which_player`: the player whose card is guessed.
