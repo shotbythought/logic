@@ -1,5 +1,7 @@
-from Player import Player
 from copy import deepcopy
+from GameState import GameState
+from Player import Player
+
 import pprint
 
 class JoneAndMike(Player):
@@ -8,7 +10,21 @@ class JoneAndMike(Player):
 
     def pass_card(self, gamestate):
         """ returns the index of the card to pass """
-        raise Exception('Unimplemented pass_card')
+        gs_copy = deepcopy(gamestate)
+        lowest_score = float('inf')
+        best_index = -1
+        for i in range(6):
+            gs_copy.cards[self.position][i]['rank'] = 'Unclear'
+        for i in range(6):
+            gs_copy.cards[self.position][i] = gamestate.cards[self.position][i]
+            igs = self.get_deductions(gs_copy.cards)
+            score = self.num_possible_configs(igs)
+            if score < lowest_score:
+                lowest_score = score
+                best_index = i
+            gs_copy.cards[self.position][i]['rank'] = 'Unclear'
+        return best_index
+    # TODO implement entropy calculation
 
     def guess_card(self, gamestate):
         """ returns a tuple (pid, ind, guess), which is equivalent to guessing the indth card of pid as guess """
@@ -16,7 +32,20 @@ class JoneAndMike(Player):
 
     def flip_card(self, gamestate):
         """ returns the index of the card to flip """
-        raise Exception('Unimplemented flip')
+        gs_copy = deepcopy(gamestate)
+        highest_score = 0
+        best_index = -1
+        for i in range(6):
+            gs_copy.cards[self.position][i]['rank'] = 'Unclear'
+        for i in range(6):
+            gs_copy.cards[self.position][i] = gamestate.cards[self.position][i]
+            igs = self.get_deductions(gs_copy.cards)
+            score = self.num_possible_configs(igs)
+            if score > highest_score:
+                highest_score = score
+                best_index = i
+            gs_copy.cards[self.position][i]['rank'] = 'Unclear'
+        return best_index
 
     def claim(self, gamestate):
         """ returns a tuple (claiming, cards) of a boolean and a list of list """
@@ -24,28 +53,28 @@ class JoneAndMike(Player):
         """ list of list: structure which contains all the correct answers """
         raise Exception('Unimplemented claim')
 
-    def get_internal_gamestate(self, gamestate):
-        """given an external gamestate, updates internal gamestate"""
+    def get_deductions(self, cards):
+        """given a list of cards, updates internal gamestate"""
         deduction = [[[set(range(12)),0] for j in range(6)] for i in range(4)]
 
         for i in range(4):
             for j in range(6):
-                deduction[i][j][1] = gamestate[i][j]['color']
+                deduction[i][j][1] = cards[i][j]['color']
 
-                if gamestate[i][j]['rank'] != 'Unclear':
-                    deduction[i][j][0] = set([gamestate[i][j]['rank']])
+                if cards[i][j]['rank'] != 'Unclear':
+                    deduction[i][j][0] = set([cards[i][j]['rank']])
 
+        deduction = self.do_complete_deduction(deduction)
+
+        return deduction
+
+    def do_complete_deduction(self, deduction):
         old_deduction = deepcopy(deduction)
         deduction = self.do_deduction(deduction)
         while old_deduction != deduction:
             old_deduction = deepcopy(deduction)
             deduction = self.do_deduction(deduction)
-
-        pp = pprint.PrettyPrinter(indent=4)
-        print(pprint.pformat(deduction))
-
         return deduction
-
 
     def do_deduction(self, deduction):
         # Increasing
@@ -91,49 +120,47 @@ class JoneAndMike(Player):
                             instances += 1
                             person = i
                             card = j
-
-                assert instances != 0
+                if instances == 0:
+                    raise Exception("bad") 
                 if instances == 1:
                     deduction[person][card][0] = set([rank])
 
-
-
         return deduction
 
+    def num_possible_configs(self, igs):
+        """given an Internal Gamestate structure, calculates approximate number of possible configs"""
 
-    def num_possible_configs(self, internal_gamestate):
-        """given an Internal Gamestate structure, calculates number of possible configs"""
-        pass
+        #Sharon's number
+        product = 1
+        for i in range(len(igs)):
+            for j in range(len(igs[0])):
+                product *= len(igs[i][j][0])
+        return product
+
+    def DFS(self, igs):
+        """Potential thing we can use for DFS"""
+        if all(all(len(card[0]) == 1 for card in hand) for hand in igs): 
+            self.config_count += 1
+            return
+
+        for i in range(len(igs)):
+            for j in range(len(igs[0])):
+                card = igs[i][j]
+                color = card[1]
+                pos = card[0]
+                if len(pos) != 1:
+                    for pos_num in pos:
+                        newigs = deepcopy(igs)
+                        newigs[i][j][0] = set([pos_num])
+                        try:
+                            newigs = self.do_complete_deduction(newigs)
+                        except Exception:
+                            pass
+                        self.search(newigs)
 
 
 jam = JoneAndMike(0)
-
-# jam.get_internal_gamestate([   [   {'color': 1, 'rank': 0},
-#         {'color': 1, 'rank': 1},
-#         {'color': 0, 'rank': 2},
-#         {'color': 0, 'rank': 4},
-#         {'color': 1, 'rank': 8},
-#         {'color': 1, 'rank': 11}],
-#     [   {'color': 1, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'}],
-#     [   {'color': 0, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'}],
-#     [   {'color': 0, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'},
-#         {'color': 1, 'rank': 'Unclear'},
-#         {'color': 0, 'rank': 'Unclear'}]])
-
-jam.get_internal_gamestate([   [   {'color': 1, 'rank': 0},
+gs = GameState([   [   {'color': 1, 'rank': 0},
         {'color': 1, 'rank': 1},
         {'color': 0, 'rank': 2},
         {'color': 0, 'rank': 4},
@@ -156,4 +183,9 @@ jam.get_internal_gamestate([   [   {'color': 1, 'rank': 0},
         {'color': 0, 'rank': 'Unclear'},
         {'color': 0, 'rank': 'Unclear'},
         {'color': 1, 'rank': 'Unclear'},
-        {'color': 0, 'rank': 'Unclear'}]])
+        {'color': 0, 'rank': 'Unclear'}]], jam.position)
+
+igs = jam.get_deductions(gs.cards)
+
+print (jam.pass_card(gs))
+print (jam.flip_card(gs))
