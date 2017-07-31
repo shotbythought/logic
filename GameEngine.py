@@ -13,8 +13,6 @@ num_games = 1000
 total_score = [0] * 4
 debug = True
 
-import sys;sys.exit(0)
-
 for game_count in range(0, num_games):
 	g = Game(AIs, debug = debug)
 	score = [0] * 4
