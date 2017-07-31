@@ -11,14 +11,23 @@ class JoneAndMike(Player):
     def __init__(self, position):
         self.position = position
 
+        # cards of mine that everyone knows
+        self.revealed = []
+
+        #cards of mine that partner knows
+        self.passed = []
+
     def pass_card(self, gamestate):
         """ returns the index of the card to pass """
         gs_copy = deepcopy(gamestate)
         lowest_score = float('inf')
         best_index = -1
-        for i in range(6):
+        possible_passes = list(range(6))
+        for x in self.passed:
+            possible_passes.remove(x)
+        for i in possible_passes:
             gs_copy.cards[self.position][i]['rank'] = 'Unclear'
-        for i in range(6):
+        for i in possible_passes:
             gs_copy.cards[self.position][i] = gamestate.cards[self.position][i]
             igs = self.get_deductions(gs_copy.cards)
             score = self.num_possible_configs(igs)
@@ -26,10 +35,13 @@ class JoneAndMike(Player):
                 lowest_score = score
                 best_index = i
             gs_copy.cards[self.position][i]['rank'] = 'Unclear'
+        self.passed.append(best_index)
         return best_index
     # TODO implement entropy calculation
+    # TODO after we receive any gamestate, we want to check to see if our opponents guessed any of our cards correctly to update self.revealed
 
     def guess_card(self, gamestate):
+        """ returns a tuple (pid, ind, guess), which is equivalent to guessing the indth card of pid as guess """
         deduction = self.get_deductions(gamestate.cards)
 
         guesses = []
@@ -45,18 +57,17 @@ class JoneAndMike(Player):
 
         return (guesses[0][1], guesses[0][2], guesses[0][3])
 
-
-        """ returns a tuple (pid, ind, guess), which is equivalent to guessing the indth card of pid as guess """
-        raise Exception('Unimplemented guess')
-
     def flip_card(self, gamestate):
         """ returns the index of the card to flip """
         gs_copy = deepcopy(gamestate)
         highest_score = 0
         best_index = -1
-        for i in range(6):
+        possible_flips = list(range(6))
+        for x in self.revealed:
+            possible_flips.remove(x)
+        for i in possible_flips:
             gs_copy.cards[self.position][i]['rank'] = 'Unclear'
-        for i in range(6):
+        for i in possible_flips:
             gs_copy.cards[self.position][i] = gamestate.cards[self.position][i]
             igs = self.get_deductions(gs_copy.cards)
             score = self.num_possible_configs(igs)
@@ -64,6 +75,8 @@ class JoneAndMike(Player):
                 highest_score = score
                 best_index = i
             gs_copy.cards[self.position][i]['rank'] = 'Unclear'
+        self.revealed.append(best_index)
+        self.passed.append(best_index)
         return best_index
 
     def claim(self, gamestate):
