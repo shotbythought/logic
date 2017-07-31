@@ -49,7 +49,8 @@ class JoneAndMike(Player):
             for j in range(6):
                 num_pos = len(deduction[i][j][0])
                 if num_pos != 1:
-                    guesses.append((num_pos, i, j, list(deduction[i][j][0])[random.randint(0,3)]))
+                    print(deduction)
+                    guesses.append((num_pos, i, j, list(deduction[i][j][0])[random.randint(0,num_pos-1)]))
 
         guesses.sort()
 
