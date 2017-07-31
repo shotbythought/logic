@@ -41,7 +41,7 @@ class JoneAndMike(Player):
 
         guesses.sort()
 
-        print(guesses)
+        # print(guesses)
 
         return (guesses[0][1], guesses[0][2], guesses[0][3])
 
@@ -67,10 +67,19 @@ class JoneAndMike(Player):
         return best_index
 
     def claim(self, gamestate):
-        """ returns a tuple (claiming, cards) of a boolean and a list of list """
-        """ bool: true or false, whether the player wants to claim """
-        """ list of list: structure which contains all the correct answers """
-        raise Exception('Unimplemented claim')
+        deduction = self.get_deductions(gamestate.cards)
+
+        if all(all(len(card[0]) == 1 for card in hand) for hand in deduction): 
+            claim = []
+            for i in range(4):
+                hand = []
+                for j in range(6):
+                    hand.append(list(deduction[i][j][0])[0])
+                claim.append(hand)
+
+            return (True, claim)
+
+        return (False, [])
 
     def get_deductions(self, cards):
         """given a list of cards, updates internal gamestate"""
@@ -182,7 +191,7 @@ class JoneAndMike(Player):
                             pass
                         self.search(newigs)
 
-if __name__ == '__main':
+if __name__ == '__main__':
     jam = JoneAndMike(0)
 
     jam.get_deductions([   [   {'color': 1, 'rank': 0},
@@ -210,34 +219,38 @@ if __name__ == '__main':
             {'color': 1, 'rank': 'Unclear'},
             {'color': 0, 'rank': 'Unclear'}]])
 
-    cards = [   [   {'color': 1, 'rank': 0},
-            {'color': 1, 'rank': 1},
-            {'color': 0, 'rank': 2},
-            {'color': 0, 'rank': 4},
-            {'color': 1, 'rank': 8},
-            {'color': 1, 'rank': 11}],
-        [   {'color': 1, 'rank': 'Unclear'},
-            {'color': 1, 'rank': 'Unclear'},
-            {'color': 1, 'rank': 'Unclear'},
-            {'color': 0, 'rank': 'Unclear'},
-            {'color': 1, 'rank': 'Unclear'},
-            {'color': 1, 'rank': 'Unclear'}],
-        [   {'color': 0, 'rank': 'Unclear'},
-            {'color': 1, 'rank': 'Unclear'},
-            {'color': 1, 'rank': 'Unclear'},
-            {'color': 0, 'rank': 'Unclear'},
-            {'color': 0, 'rank': 'Unclear'},
-            {'color': 0, 'rank': 'Unclear'}],
-        [   {'color': 0, 'rank': 'Unclear'},
-            {'color': 0, 'rank': 'Unclear'},
-            {'color': 0, 'rank': 'Unclear'},
-            {'color': 0, 'rank': 'Unclear'},
-            {'color': 1, 'rank': 'Unclear'},
-            {'color': 0, 'rank': 'Unclear'}]]
+    # cards = [   [   {'color': 1, 'rank': 0},
+    #         {'color': 1, 'rank': 1},
+    #         {'color': 0, 'rank': 2},
+    #         {'color': 0, 'rank': 4},
+    #         {'color': 1, 'rank': 8},
+    #         {'color': 1, 'rank': 11}],
+    #     [   {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'}],
+    #     [   {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'}],
+    #     [   {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'},
+    #         {'color': 1, 'rank': 'Unclear'},
+    #         {'color': 0, 'rank': 'Unclear'}]]
+
+    cards = [[{'color': 0, 'rank': 1}, {'color': 0, 'rank': 3}, {'color': 1, 'rank': 4}, {'color': 0, 'rank': 4}, {'color': 1, 'rank': 8}, {'color': 0, 'rank': 8}], [{'color': 0, 'rank': 2}, {'color': 0, 'rank': 7}, {'color': 1, 'rank': 7}, {'color': 0, 'rank': 9}, {'color': 1, 'rank': 9}, {'color': 1, 'rank': 10}], [{'color': 1, 'rank': 0}, {'color': 1, 'rank': 2}, {'color': 1, 'rank': 3}, {'color': 1, 'rank': 5}, {'color': 1, 'rank': 6}, {'color': 1, 'rank': 11}], [{'color': 0, 'rank': 0}, {'color': 1, 'rank': 1}, {'color': 0, 'rank': 5}, {'color': 0, 'rank': 6}, {'color': 0, 'rank': 10}, {'color': 0, 'rank': 11}]]
 
     gs = GameState(cards=cards, player=0)
 
-    print(jam.guess_card(gs))
+    gs.cards = cards
+
+    print(jam.claim(gs))
 
 
     # jam.get_internal_gamestate([   [   {'color': 1, 'rank': 0},
