@@ -12,22 +12,21 @@ class JoneAndMike(Player):
         self.position = position
 
         # cards of mine that everyone knows
-        self.revealed = []
+        self.not_revealed = set(range(6))
 
         #cards of mine that partner knows
-        self.passed = []
+        self.not_passed = set(range(6))
 
     def pass_card(self, gamestate):
         """ returns the index of the card to pass """
+        gamestate = self.update_internal(gamestate)
+
         gs_copy = deepcopy(gamestate)
         lowest_score = float('inf')
         best_index = -1
-        possible_passes = list(range(6))
-        for x in self.passed:
-            possible_passes.remove(x)
-        for i in possible_passes:
+        for i in self.not_passed:
             gs_copy.cards[self.position][i]['rank'] = 'Unclear'
-        for i in possible_passes:
+        for i in self.not_passed:
             gs_copy.cards[self.position][i] = gamestate.cards[self.position][i]
             igs = self.get_deductions(gs_copy.cards)
             score = self.num_possible_configs(igs)
@@ -35,13 +34,19 @@ class JoneAndMike(Player):
                 lowest_score = score
                 best_index = i
             gs_copy.cards[self.position][i]['rank'] = 'Unclear'
-        self.passed.append(best_index)
+        if best_index == -1:
+            print(self.not_passed)
+            print(self.get_deductions(gs_copy.cards))
+        self.not_passed.discard(best_index)
         return best_index
     # TODO implement entropy calculation
-    # TODO after we receive any gamestate, we want to check to see if our opponents guessed any of our cards correctly to update self.revealed
+    # TODO after we guess incorrectly, we want to update our internal gamestate
+    # TODO make player reset not_lists after every round
 
     def guess_card(self, gamestate):
         """ returns a tuple (pid, ind, guess), which is equivalent to guessing the indth card of pid as guess """
+        gamestate = self.update_internal(gamestate)
+
         deduction = self.get_deductions(gamestate.cards)
 
         guesses = []
@@ -49,7 +54,6 @@ class JoneAndMike(Player):
             for j in range(6):
                 num_pos = len(deduction[i][j][0])
                 if num_pos != 1:
-                    print(deduction)
                     guesses.append((num_pos, i, j, list(deduction[i][j][0])[random.randint(0,num_pos-1)]))
 
         guesses.sort()
@@ -60,15 +64,15 @@ class JoneAndMike(Player):
 
     def flip_card(self, gamestate):
         """ returns the index of the card to flip """
+        gamestate = self.update_internal(gamestate)
+
         gs_copy = deepcopy(gamestate)
         highest_score = 0
         best_index = -1
         possible_flips = list(range(6))
-        for x in self.revealed:
-            possible_flips.remove(x)
-        for i in possible_flips:
+        for i in self.not_revealed:
             gs_copy.cards[self.position][i]['rank'] = 'Unclear'
-        for i in possible_flips:
+        for i in self.not_revealed:
             gs_copy.cards[self.position][i] = gamestate.cards[self.position][i]
             igs = self.get_deductions(gs_copy.cards)
             score = self.num_possible_configs(igs)
@@ -76,8 +80,8 @@ class JoneAndMike(Player):
                 highest_score = score
                 best_index = i
             gs_copy.cards[self.position][i]['rank'] = 'Unclear'
-        self.revealed.append(best_index)
-        self.passed.append(best_index)
+        self.not_revealed.discard(best_index)
+        self.not_passed.discard(best_index)
         return best_index
 
     def claim(self, gamestate):
@@ -94,6 +98,14 @@ class JoneAndMike(Player):
             return (True, claim)
 
         return (False, [])
+
+    def update_internal(self, gamestate):
+        """Given gamestate, update internal knowledge about things"""
+        """WIP, we probably need to add more things"""
+        for action in gamestate.history:
+            if action.action_type == "guess" and action.which_player == self.position and action.is_correct:
+                self.not_revealed.discard(action.which_card)
+                self.not_passed.discard(action.which_card)
 
     def get_deductions(self, cards):
         """given a list of cards, updates internal gamestate"""

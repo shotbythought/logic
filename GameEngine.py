@@ -2,18 +2,14 @@ from Game import Game
 from ManualAI import ManualAI
 from JoneAndMike import JoneAndMike
 
-
-jm = JoneAndMike(0)
-
-
-AIs = []
-for i in range(4):
-    AIs.append(JoneAndMike(i))
 num_games = 10
 total_score = [0] * 4
 debug = True
 
 for game_count in range(0, num_games):
+	AIs = []
+	for i in range(4):
+	    AIs.append(JoneAndMike(i))
 	g = Game(AIs, debug = debug)
 	score = [0] * 4
 	try:
