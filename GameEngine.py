@@ -8,8 +8,8 @@ jm = JoneAndMike(0)
 
 AIs = []
 for i in range(4):
-    AIs.append(ManualAI(i))
-num_games = 1000
+    AIs.append(JoneAndMike(i))
+num_games = 10
 total_score = [0] * 4
 debug = True
 

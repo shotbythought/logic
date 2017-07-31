@@ -1,7 +1,7 @@
 from Action import Action
 from GameState import GameState
 from ManualAI import ManualAI
-
+from copy import deepcopy
 import random
 
 class Game:
@@ -28,7 +28,7 @@ class Game:
         random.shuffle(players)
 
         for player in players:
-            is_claiming, cards = self.AIs[player].claim(self.pgs[player])
+            is_claiming, cards = self.AIs[player].claim(deepcopy(self.pgs[player]))
 
             if is_claiming:
                 self.do_claim(player, cards)
@@ -37,21 +37,21 @@ class Game:
         return False
 
     def play_turn(self):
-        which_card = self.AIs[self.turn].pass_card(self.pgs[self.turn])
+        which_card = self.AIs[self.turn].pass_card(deepcopy(self.pgs[self.turn]))
         self.do_pass(which_card)
 
         if self.check_claims():
             return
 
         friend = (self.turn+2)%4
-        which_player, which_card, guess = self.AIs[friend].guess_card(self.pgs[friend])
+        which_player, which_card, guess = self.AIs[friend].guess_card(deepcopy(self.pgs[friend]))
         correct = self.do_guess(which_player, which_card, guess)
 
         if self.check_claims():
             return
 
         if not correct:
-            which_card = self.AIs[friend].flip_card(self.pgs[friend])
+            which_card = self.AIs[friend].flip_card(deepcopy(self.pgs[friend]))
             self.do_flip(which_card)
 
             if self.check_claims():
