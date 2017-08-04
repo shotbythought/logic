@@ -18,6 +18,8 @@ class Game:
         self.is_game_over = False
         self.score = [0]*4
 
+        self.turns_occurred = 0
+
     def run_game(self):
         while not self.is_game_over:
             self.play_turn()
@@ -58,6 +60,7 @@ class Game:
                 return
 
         self.turn = (self.turn + 1) % 4
+        self.turns_occurred += 1
 
     def update_history(self, action):
         self.gs.history.append(action)

@@ -1,3 +1,4 @@
+from Action import Action
 from copy import deepcopy
 from GameState import GameState
 from Player import Player
@@ -10,6 +11,10 @@ import random
 class JoneAndMike(Player):
     def __init__(self, position):
         self.position = position
+        self.friend_position = (self.position + 2)%4
+        self.viewpoints = None
+
+        self.actions_processed = 0
 
         # cards of mine that everyone knows
         self.not_revealed = set(range(6))
@@ -19,80 +24,64 @@ class JoneAndMike(Player):
 
     def pass_card(self, gamestate):
         """ returns the index of the card to pass """
-        gamestate = self.update_internal(gamestate)
+        self.update_internal(gamestate)
 
-        gs_copy = deepcopy(gamestate)
-        lowest_score = float('inf')
-        best_index = -1
+        friend_view = self.viewpoints[self.friend_position]
+        score_index = []
         for i in self.not_passed:
-            gs_copy.cards[self.position][i]['rank'] = 'Unclear'
-        for i in self.not_passed:
-            gs_copy.cards[self.position][i] = gamestate.cards[self.position][i]
-            igs = self.get_deductions(gs_copy.cards)
-            score = self.num_possible_configs(igs)
-            if score < lowest_score:
-                lowest_score = score
-                best_index = i
-            gs_copy.cards[self.position][i]['rank'] = 'Unclear'
-        if best_index == -1:
-            print(self.not_passed)
-            print(self.get_deductions(gs_copy.cards))
-        self.not_passed.discard(best_index)
-        return best_index
+            friend_with_card = self.update_viewpoint_given_action(self.friend_position, friend_view, Action("pass", self.position, i), gamestate)
+            score = self.num_possible_configs(friend_with_card)
+            score_index.append((score, i))
+        score_index.sort()
+        if len(score_index) == 0:
+            print(self.position, gamestate.history)
+            pprint.pprint(self.viewpoints[self.position])
+        self.not_passed.discard(score_index[0][1]) # we want the one with the lowest score
+        return score_index[0][1]
     # TODO implement entropy calculation
-    # TODO after we guess incorrectly, we want to update our internal gamestate
     # TODO make player reset not_lists after every round
 
     def guess_card(self, gamestate):
         """ returns a tuple (pid, ind, guess), which is equivalent to guessing the indth card of pid as guess """
-        gamestate = self.update_internal(gamestate)
+        self.update_internal(gamestate)
 
-        deduction = self.get_deductions(gamestate.cards)
-
-        guesses = []
-        for i in [(self.position+1)%4, (self.position+3)%4]:
-            for j in range(6):
-                num_pos = len(deduction[i][j][0])
+        possibilities_guess = []
+        for which_player in [(self.position+1)%4, (self.position+3)%4]:
+            for which_card in range(6):
+                num_pos = len(self.viewpoints[self.position][which_player][which_card][0])
                 if num_pos != 1:
-                    guesses.append((num_pos, i, j, list(deduction[i][j][0])[random.randint(0,num_pos-1)]))
+                    possibilities_guess.append((num_pos, which_player, which_card, list(self.viewpoints[self.position][which_player][which_card][0])[random.randint(0,num_pos-1)]))
 
-        guesses.sort()
+        random.shuffle(possibilities_guess)
+        possibilities_guess.sort(key=lambda x: x[0])
 
-        # print(guesses)
-
-        return (guesses[0][1], guesses[0][2], guesses[0][3])
+        return (possibilities_guess[0][1], possibilities_guess[0][2], possibilities_guess[0][3])
 
     def flip_card(self, gamestate):
         """ returns the index of the card to flip """
-        gamestate = self.update_internal(gamestate)
+        self.update_internal(gamestate)
 
-        gs_copy = deepcopy(gamestate)
-        highest_score = 0
-        best_index = -1
-        possible_flips = list(range(6))
+        score_index = []
         for i in self.not_revealed:
-            gs_copy.cards[self.position][i]['rank'] = 'Unclear'
-        for i in self.not_revealed:
-            gs_copy.cards[self.position][i] = gamestate.cards[self.position][i]
-            igs = self.get_deductions(gs_copy.cards)
-            score = self.num_possible_configs(igs)
-            if score > highest_score:
-                highest_score = score
-                best_index = i
-            gs_copy.cards[self.position][i]['rank'] = 'Unclear'
-        self.not_revealed.discard(best_index)
-        self.not_passed.discard(best_index)
-        return best_index
+            flip_action = Action("flip", self.position, i)
+            opponent1_with_card = self.update_viewpoint_given_action((self.position + 1)%4, self.viewpoints[(self.position + 1)%4], flip_action, gamestate)
+            opponent2_with_card = self.update_viewpoint_given_action((self.position + 3)%4, self.viewpoints[(self.position + 3)%4], flip_action, gamestate)
+            score = self.num_possible_configs(opponent1_with_card) + self.num_possible_configs(opponent2_with_card)
+            score_index.append((score, i))
+        score_index.sort(reverse = True)
+        self.not_revealed.discard(score_index[0][1]) # we want the one with the higest score
+        self.not_passed.discard(score_index[0][1]) # we want the one with the higest score
+        return score_index[0][1]
 
     def claim(self, gamestate):
-        deduction = self.get_deductions(gamestate.cards)
+        self.update_internal(gamestate)
 
-        if all(all(len(card[0]) == 1 for card in hand) for hand in deduction): 
+        if all(all(len(card[0]) == 1 for card in hand) for hand in self.viewpoints[self.position]): 
             claim = []
             for i in range(4):
                 hand = []
                 for j in range(6):
-                    hand.append(list(deduction[i][j][0])[0])
+                    hand.append(list(self.viewpoints[self.position][i][j][0])[0])
                 claim.append(hand)
 
             return (True, claim)
@@ -100,22 +89,54 @@ class JoneAndMike(Player):
         return (False, [])
 
     def update_internal(self, gamestate):
-        """Given gamestate, update internal knowledge about things"""
-        """WIP, we probably need to add more things"""
-        for action in gamestate.history:
-            if action.action_type == "guess" and action.which_player == self.position and action.is_correct:
-                self.not_revealed.discard(action.which_card)
-                self.not_passed.discard(action.which_card)
+        """Given external gamestate, update internal gamestate"""
 
-    def get_deductions(self, cards):
-        """given a list of cards, updates internal gamestate"""
+        if not self.viewpoints:
+            self.viewpoints = [self.initialize_viewpoint(gamestate.cards,i) for i in range(4)]
+
+        for i in range(4):
+            for action in gamestate.history[self.actions_processed:]:
+                self.viewpoints[i] = self.update_viewpoint_given_action(i, self.viewpoints[i], action, gamestate, True)
+
+        self.actions_processed = len(gamestate.history)
+
+    def update_viewpoint_given_action(self, player, viewpoint, action, gamestate, is_master = False):
+        """Given a view point and an action, """
+        """returns modified version of fully reduced view point"""
+        """WIP, we probably need to add more things"""
+        viewpoint = deepcopy(viewpoint)
+        if action.action_type == "pass":
+            from_player = action.player
+            receive_player = (action.player + 2) % 4
+
+            if receive_player == player and (action.player - self.position) % 2 == 0:
+                viewpoint[from_player][action.which_card][0] = set([gamestate.cards[from_player][action.which_card]['rank']])
+
+        elif action.action_type == "guess":
+            if action.is_correct:
+                viewpoint[action.which_player][action.which_card][0] = set([action.guess])
+                if is_master and action.which_player == self.position:
+                    self.not_revealed.discard(action.which_card)
+                    self.not_passed.discard(action.which_card)
+            else:
+                viewpoint[action.which_player][action.which_card][0].discard(action.guess)
+                # guesser probably doesn't have the card
+                # for card_position in range(6):
+                    # viewpoint[action.player][card_position][0].discard(action.guess)
+            
+        elif action.action_type == "flip":
+            viewpoint[action.player][action.which_card][0] = set([gamestate.cards[action.player][action.which_card]['rank']])
+        return self.do_complete_deduction(viewpoint)
+
+    def initialize_viewpoint(self, cards, position):
+        """given a list of cards and a position, returns one viewpoint of the position"""
         deduction = [[[set(range(12)),0] for j in range(6)] for i in range(4)]
 
         for i in range(4):
             for j in range(6):
                 deduction[i][j][1] = cards[i][j]['color']
 
-                if cards[i][j]['rank'] != 'Unclear':
+                if cards[i][j]['rank'] != 'Unclear' and position == i:
                     deduction[i][j][0] = set([cards[i][j]['rank']])
 
         deduction = self.do_complete_deduction(deduction)
@@ -164,6 +185,24 @@ class JoneAndMike(Player):
                                     deduction[k][l][0].remove(only_number)
                                     # print("Hand %d Card %d can't be %d because it already exists somewhere" % (i, j, num))
 
+        # Uniqueness of 2s
+        for color in range(2):
+            for rank1 in range(12):
+                for rank2 in range(12):
+                    if rank1 == rank2:
+                        continue
+                    instances = []
+                    for i in range(4):
+                        for j in range(6):
+                            if set([rank1, rank2]) == deduction[i][j][0] and color == deduction[i][j][1]:
+                                instances.append((i,j))
+                    if len(instances) == 2:
+                        for i in range(4):
+                            for j in range(6):
+                                if (i,j) not in instances and color == deduction[i][j][1]:
+                                    deduction[i][j][0].discard(rank1)
+                                    deduction[i][j][0].discard(rank2)
+
         # Existence
         for rank in range(12):
             for color in range(2):
@@ -178,6 +217,7 @@ class JoneAndMike(Player):
                             person = i
                             card = j
                 if instances == 0:
+                    pprint.pprint(self.viewpoints)
                     raise Exception("bad") 
                 if instances == 1:
                     # if len(deduction[person][card][0]) > 1:
