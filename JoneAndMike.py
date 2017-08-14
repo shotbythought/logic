@@ -25,6 +25,8 @@ class JoneAndMike(Player):
     def pass_card(self, gamestate):
         """ returns the index of the card to pass """
         self.update_internal(gamestate)
+        if len(self.not_passed) == 0:
+            return -1
 
         friend_view = self.viewpoints[self.friend_position]
         score_index = []

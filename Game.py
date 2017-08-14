@@ -72,6 +72,9 @@ class Game:
         from_player = self.turn
         receive_player = (self.turn+2)%4
 
+        if all([self.pgs[receive_player].cards[from_player][card]['rank'] != 'Unclear' for card in range(6)]):
+            return
+
         self.check_input(which_card >= 0 and which_card < 6, ("Cannot pass the %dth card" % which_card))
         self.check_input(self.pgs[receive_player].cards[from_player][which_card]['rank'] == 'Unclear', \
                ("Cannot pass the %dth card, as it has already been passed" % which_card))
@@ -103,7 +106,11 @@ class Game:
         return is_correct
 
     def do_flip(self, which_card):
-        flip_player = (self.turn+2)%4
+        flip_player = (self.turn + 2) % 4
+        opponent = (flip_player + 1) % 4
+
+        if all([self.pgs[opponent].cards[flip_player][card]['rank'] != 'Unclear' for card in range(6)]):
+            return
 
         self.check_input(which_card >= 0 and which_card < 6, ("Cannot pass the %dth card" % which_card))
         self.check_input(self.pgs[(flip_player + 1) % 4].cards[flip_player][which_card]['rank'] == 'Unclear', \
